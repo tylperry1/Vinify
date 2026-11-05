@@ -1,0 +1,297 @@
+// Vinify core data model — Roadmap Phases 4–8.
+// Status: DESIGNED, not yet migrated against a database.
+//
+// Principles:
+// - Credits are an append-only ledger; balance = SUM(delta). Never mutate a balance column.
+// - Paid supplier calls reserve a credit first, then CONSUME or RELEASE it.
+// - Stripe webhook events are stored by event id to make processing idempotent.
+// - Supplier timestamps (sourceAsOf) are kept separate from Vinify generation time.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  SUPPORT
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum ProductType {
+  SINGLE_REPORT
+  REPORT_BUNDLE
+  SUBSCRIPTION
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+}
+
+enum LedgerReason {
+  PURCHASE          // one-time purchase grant
+  SUBSCRIPTION_GRANT
+  RESERVE           // held while a report is generated
+  RELEASE           // reservation returned (supplier failure)
+  CONSUME           // reservation finalised
+  EXPIRE
+  ADMIN_ADJUSTMENT
+  REFUND_REVERSAL
+}
+
+enum ReportRequestStatus {
+  QUEUED
+  FETCHING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  emailVerified  DateTime?
+  name           String?
+  passwordHash   String?
+  role           Role      @default(CUSTOMER)
+  stripeCustomer String?   @unique
+  marketingOptIn Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  accounts       Account[]
+  sessions       Session[]
+  orders         Order[]
+  subscriptions  Subscription[]
+  ledger         CreditLedger[]
+  reportRequests ReportRequest[]
+  reports        Report[]
+  savedVehicles  SavedVehicle[]
+  searches       VinSearch[]
+  tickets        SupportTicket[]
+  auditLogs      AuditLog[]      @relation("actor")
+}
+
+// Auth.js-compatible tables
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Order {
+  id                    String      @id @default(cuid())
+  userId                String
+  product               ProductType
+  planId                String
+  amountCents           Int
+  currency              String      @default("usd")
+  taxCents              Int         @default(0)
+  status                OrderStatus @default(PENDING)
+  stripeCheckoutSession String?     @unique
+  stripePaymentIntent   String?     @unique
+  promoCode             String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  user                  User        @relation(fields: [userId], references: [id])
+  ledger                CreditLedger[]
+
+  @@index([userId, createdAt])
+}
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  userId             String
+  planId             String
+  stripeSubscription String             @unique
+  status             SubscriptionStatus
+  reportsPerPeriod   Int
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  user               User               @relation(fields: [userId], references: [id])
+
+  @@index([userId, status])
+}
+
+model CreditLedger {
+  id              String         @id @default(cuid())
+  userId          String
+  delta           Int            // +grant / -reserve / +release
+  reason          LedgerReason
+  orderId         String?
+  subscriptionId  String?
+  reportRequestId String?
+  expiresAt       DateTime?
+  note            String?
+  actorId         String?        // admin adjustments
+  /// Unique key so retries can never double-grant or double-consume.
+  idempotencyKey  String         @unique
+  createdAt       DateTime       @default(now())
+  user            User           @relation(fields: [userId], references: [id])
+  order           Order?         @relation(fields: [orderId], references: [id])
+  reportRequest   ReportRequest? @relation(fields: [reportRequestId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model ReportRequest {
+  id             String              @id @default(cuid())
+  userId         String
+  vin            String              @db.Char(17)
+  status         ReportRequestStatus @default(QUEUED)
+  idempotencyKey String              @unique
+  attempts       Int                 @default(0)
+  lastError      String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  user           User                @relation(fields: [userId], references: [id])
+  report         Report?
+  supplierCalls  SupplierRequest[]
+  ledger         CreditLedger[]
+
+  @@index([userId, vin])
+}
+
+model Report {
+  id               String        @id @default(cuid())
+  /// Human-facing report number, e.g. VNF-7K2Q-91XM
+  publicId         String        @unique
+  userId           String
+  reportRequestId  String        @unique
+  vin              String        @db.Char(17)
+  provider         String
+  providerReportId String?
+  sourceAsOf       DateTime?
+  generatedAt      DateTime      @default(now())
+  version          Int           @default(1)
+  data             Json          // NormalizedReport
+  pdfKey           String?       // private object storage key
+  user             User          @relation(fields: [userId], references: [id])
+  reportRequest    ReportRequest @relation(fields: [reportRequestId], references: [id])
+
+  @@index([userId, vin, generatedAt])
+}
+
+model SupplierRequest {
+  id              String        @id @default(cuid())
+  reportRequestId String
+  provider        String
+  attempt         Int
+  httpStatus      Int?
+  latencyMs       Int?
+  success         Boolean
+  billable        Boolean
+  costCents       Int           @default(0)
+  error           String?
+  createdAt       DateTime      @default(now())
+  reportRequest   ReportRequest @relation(fields: [reportRequestId], references: [id])
+
+  @@index([provider, createdAt])
+}
+
+model VinSearch {
+  id        String   @id @default(cuid())
+  userId    String?
+  vin       String   @db.Char(17)
+  year      String?
+  make      String?
+  model     String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model SavedVehicle {
+  id        String   @id @default(cuid())
+  userId    String
+  vin       String   @db.Char(17)
+  nickname  String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, vin])
+}
+
+model WebhookEvent {
+  id          String    @id // Stripe event id — primary key gives idempotency
+  type        String
+  payload     Json
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+  error       String?
+}
+
+model SupportTicket {
+  id        String   @id @default(cuid())
+  userId    String?
+  email     String
+  category  String   // billing | report | refund | other
+  subject   String
+  body      String
+  status    String   @default("open")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  target    String?
+  meta      Json?
+  ip        String?
+  createdAt DateTime @default(now())
+  actor     User?    @relation("actor", fields: [actorId], references: [id])
+
+  @@index([action, createdAt])
+}

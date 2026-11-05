@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/* ─── Vinify design tokens ───────────────────────────────────────────
+   Clean & Modern · Blue gradient, navy, white.
+   Navy carries authority; electric blue is reserved for action + data. */
+@theme {
+  --color-navy-950: #050d22;
+  --color-navy-900: #0a1733;
+  --color-navy-800: #12234a;
+  --color-navy-700: #1c3366;
+  --color-navy-600: #2a4685;
+  --color-blue-600: #1d4ed8;
+  --color-blue-500: #2563ff;
+  --color-blue-400: #4a86ff;
+  --color-sky-400: #38b6ff;
+  --color-sky-300: #7dd3fc;
+  --color-ink: #0b1430;
+  --color-muted: #55617d;
+  --color-faint: #8a94ab;
+  --color-line: #e3e8f2;
+  --color-surface: #f5f7fb;
+  --color-good: #0f8a5f;
+  --color-good-bg: #e7f6ef;
+  --color-warn: #a15c07;
+  --color-warn-bg: #fdf3e2;
+  --color-bad: #b42318;
+  --color-bad-bg: #fdecea;
+
+  --font-display: "Cabinet Grotesk", "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --radius-card: 18px;
+  --shadow-card: 0 1px 2px rgb(10 23 51 / 0.04), 0 8px 24px -12px rgb(10 23 51 / 0.12);
+  --shadow-lift: 0 1px 2px rgb(10 23 51 / 0.06), 0 24px 48px -20px rgb(10 23 51 / 0.28);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #fff;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-blue-500) 22%, white);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-blue-500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.text-gradient {
+  background: linear-gradient(100deg, var(--color-blue-500) 10%, var(--color-sky-400) 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-brand {
+  background: linear-gradient(135deg, var(--color-blue-600) 0%, var(--color-blue-500) 45%, var(--color-sky-400) 100%);
+}
+
+/* Navy hero field with a faint engineering grid — the "spec sheet" motif. */
+.bg-hero {
+  background-color: var(--color-navy-950);
+  background-image:
+    radial-gradient(80% 60% at 85% 0%, rgb(37 99 255 / 0.35), transparent 60%),
+    radial-gradient(50% 50% at 0% 100%, rgb(56 182 255 / 0.12), transparent 70%),
+    linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size: auto, auto, 44px 44px, 44px 44px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Legal / long-form text */
+.prose-vinify h2 { font-family: var(--font-display); font-size: 1.375rem; font-weight: 700; margin: 2.25rem 0 0.75rem; letter-spacing: -0.01em; }
+.prose-vinify h3 { font-weight: 700; font-size: 1.0625rem; margin: 1.5rem 0 0.5rem; }
+.prose-vinify p, .prose-vinify li { color: var(--color-muted); line-height: 1.7; }
+.prose-vinify p { margin: 0 0 1rem; }
+.prose-vinify ul { list-style: disc; padding-left: 1.25rem; margin: 0 0 1rem; }
+.prose-vinify li { margin: 0.25rem 0; }
+.prose-vinify a { color: var(--color-blue-600); text-decoration: underline; text-underline-offset: 3px; }
+.prose-vinify strong { color: var(--color-ink); }
