@@ -39,6 +39,10 @@
   color-scheme: light;
 }
 
+.admin-input { display: block; width: 100%; border: 1px solid var(--color-line); border-radius: 8px; padding: 10px 12px; background: white; margin-top: 4px; }
+.admin-button { border-radius: 8px; background: var(--color-blue-600); color: white; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+.admin-button:disabled { opacity: .5; cursor: default; }
+
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;

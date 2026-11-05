@@ -5,6 +5,8 @@
 Vehicle History. Made Simple. · Clean & Modern — blue gradient, navy, white.
 Stack: Next.js · TypeScript · Tailwind CSS · PostgreSQL · Stripe · Vercel.
 
+The [admin platform runbook](docs/ADMIN_PLATFORM.md) records the implementation and verification added after the original baseline below. Supplier licensing, recurring billing, and public launch gates remain open.
+
 ## Status legend
 
 A box is checked **only** when the item is CONFIRMED (owner decision) or VERIFIED (implemented and tested

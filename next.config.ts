@@ -8,14 +8,13 @@ const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
 ];
 
-// STATIC_EXPORT=1 produces a static preview build (out/). Production on Vercel uses the normal server build.
-const isStatic = process.env.STATIC_EXPORT === "1";
-
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  ...(isStatic
-    ? { output: "export", images: { unoptimized: true }, trailingSlash: true }
-    : { headers: async () => [{ source: "/:path*", headers: securityHeaders }] }),
+  headers: async () => [
+    { source: "/:path*", headers: securityHeaders },
+    { source: "/admin/:path*", headers: [{ key: "Cache-Control", value: "private, no-store" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+    { source: "/account/:path*", headers: [{ key: "Cache-Control", value: "private, no-store" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+  ],
 };
 
 export default nextConfig;

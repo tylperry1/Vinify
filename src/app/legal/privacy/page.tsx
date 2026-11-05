@@ -16,6 +16,7 @@ export default function Privacy() {
         <ul>
           <li><strong>VINs you enter.</strong> Used to decode the vehicle and, when you buy one, to build your report.</li>
           <li><strong>Account details</strong> (when accounts launch): name, email, sign-in method.</li>
+          <li><strong>Support requests:</strong> the contact address, topic and message you submit when ticketing is enabled.</li>
           <li><strong>Payment details</strong> are handled by our payment processor. We don’t store full card numbers.</li>
           <li><strong>Usage data:</strong> basic logs and analytics to keep the service secure and working.</li>
         </ul>
