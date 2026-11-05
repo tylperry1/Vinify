@@ -51,7 +51,7 @@ Evidence keys: **T** = `npm test` (Vitest, 26 tests), **B** = `npm run build` + 
 - [ ] Verify domain availability and purchase domain — `NOT STARTED`
 - [ ] Conduct trademark clearance research — `NOT STARTED` (needs USPTO search + counsel)
 - [x] Create GitHub repository — `VERIFIED` github.com/tylperry1/Vinify exists with admin access. **Note: repo is public.**
-- [x] Configure Vercel hosting — `VERIFIED` 2026-11-05: project `vinify` (team tyler-perrys-projects) linked to GitHub `main`; production deployment READY at https://vinify-nine.vercel.app; pages return 200, unknown route 404, VIN decode works live (desktop + mobile), robots.txt disallows indexing. Custom domain not yet configured.
+- [x] Configure Vercel hosting — `VERIFIED` 2026-11-05: production project `govinify` (team tyler-perrys-projects) linked to GitHub `main`; production deployment READY at https://govinify.vercel.app (earlier project `vinify` / vinify-nine.vercel.app also deploys from `main` — duplicate, pending removal decision); pages return 200, unknown route 404, VIN decode works live (desktop + mobile), robots.txt disallows indexing. Custom domain not yet configured.
 - [ ] Configure production and development environments — `NOT STARTED`; `.env.example` lists required variables
 - [ ] Set up PostgreSQL database — `IMPLEMENTED` (schema only): `prisma/schema.prisma` passes `prisma validate`; no database provisioned or migrated
 - [ ] Configure environment variables and secrets — `NOT STARTED` (template in `.env.example`)
@@ -282,7 +282,7 @@ All items `NOT STARTED`.
 
 ## Change log
 
-- 2026-11-05 — First production deployment on Vercel (https://vinify-nine.vercel.app). Pushes to `main` auto-deploy to production. Site remains noindex; payments, accounts and history reports not live.
+- 2026-11-05 — First production deployment on Vercel; production project is `govinify` (https://govinify.vercel.app). Pushes to `main` auto-deploy to production. Site remains noindex; payments, accounts and history reports not live.
 
 | Date | Change | Evidence |
 |---|---|---|
