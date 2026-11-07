@@ -284,6 +284,8 @@ All items `NOT STARTED`.
 
 ## Change log
 
+- 2026-11-06 — PR #1 (admin console + backend) merged and live on `govinify`. Production PostgreSQL provisioned (Neon free plan, `vinify-production`, iad1), connected to Production only (Preview has no database by design), migration `202611050001_admin_platform` applied, `API_ENCRYPTION_KEY` and `NEXT_PUBLIC_SITE_URL` set. `VERIFIED`: production decode requests are written to `ApiUsage`/`VinSearch`. Super Admin account not yet created (owner sets password). Stripe, history supplier and commerce remain off.
+
 - 2026-11-05 — First production deployment on Vercel; production project is `govinify` (https://govinify.vercel.app). Pushes to `main` auto-deploy to production. Site remains noindex; payments, accounts and history reports not live.
 
 | Date | Change | Evidence |
