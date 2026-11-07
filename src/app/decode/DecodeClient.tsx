@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { VinSearch } from "@/components/VinSearch";
-import { type DecodedVehicle, type RecallCampaign, decodeVin, fetchModelRecalls } from "@/lib/nhtsa";
+import { type DecodedVehicle, type RecallCampaign, fetchModelRecalls } from "@/lib/nhtsa";
 import { validateVin } from "@/lib/vin";
 
 type State =
@@ -14,6 +14,12 @@ type State =
   | { kind: "done"; vehicle: DecodedVehicle };
 
 type RecallState = { kind: "idle" | "loading" } | { kind: "error" } | { kind: "done"; items: RecallCampaign[] };
+
+async function decodeVin(vin: string, init?: RequestInit): Promise<DecodedVehicle> {
+  const response = await fetch(`/api/decode?vin=${encodeURIComponent(vin)}`, init);
+  if (!response.ok) throw new Error("The decoder is temporarily unavailable. Please try again shortly.");
+  return response.json();
+}
 
 function Spec({ label, value }: { label: string; value: string | null | undefined }) {
   return (

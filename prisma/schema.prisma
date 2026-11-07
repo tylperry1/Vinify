@@ -1,5 +1,5 @@
 // Vinify core data model — Roadmap Phases 4–8.
-// Status: DESIGNED, not yet migrated against a database.
+// Initial PostgreSQL migration lives in prisma/migrations.
 //
 // Principles:
 // - Credits are an append-only ledger; balance = SUM(delta). Never mutate a balance column.
@@ -20,6 +20,7 @@ enum Role {
   CUSTOMER
   SUPPORT
   ADMIN
+  SUPER_ADMIN
 }
 
 enum OrderStatus {
@@ -294,4 +295,30 @@ model AuditLog {
   actor     User?    @relation("actor", fields: [actorId], references: [id])
 
   @@index([action, createdAt])
+}
+
+model ApiProvider {
+  id String @id
+  enabled Boolean @default(false)
+  encryptedSecret String?
+  costCents Int @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model ApiUsage {
+  id String @id @default(cuid())
+  provider String
+  operation String
+  success Boolean
+  status Int?
+  latencyMs Int
+  costCents Int @default(0)
+  createdAt DateTime @default(now())
+  @@index([provider, createdAt])
+}
+
+model RateLimit {
+  key String @id
+  count Int @default(1)
+  expiresAt DateTime
 }

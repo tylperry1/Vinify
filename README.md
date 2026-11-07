@@ -2,24 +2,25 @@
 
 Vehicle History. Made Simple. — VIN decoding and vehicle history reports.
 
-> Pre-launch. The free NHTSA-based VIN decoder works today. Paid history reports are blocked on supplier
-> contracts. See [`ROADMAP.md`](./ROADMAP.md) for exact status and [`docs/RESEARCH.md`](./docs/RESEARCH.md)
-> for supplier, pricing and legal findings.
+> Pre-launch. The NHTSA VIN decoder is free. Paid history sales require a licensed supplier and verified billing.
+> See the [admin runbook](./docs/ADMIN_PLATFORM.md), [roadmap](./ROADMAP.md), and [supplier research](./docs/RESEARCH.md).
 
 ## Stack
 
-Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · PostgreSQL via Prisma · Stripe (planned) · Vercel
+Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · PostgreSQL via Prisma · Stripe · Vercel
 
 ## Getting started
 
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev          # http://localhost:3000
 npm test             # Vitest unit tests
 npm run build        # production build
-STATIC_EXPORT=1 npm run build   # static preview into out/
 ```
+
+The public site and decoder work without a database. For the admin console and account pages, see the
+[database and staff setup](./docs/ADMIN_PLATFORM.md). The app requires a Next.js server build for its API routes.
 
 ## Layout
 

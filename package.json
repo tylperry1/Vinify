@@ -8,18 +8,23 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "build:static": "STATIC_EXPORT=1 next build",
-    "db:validate": "prisma validate"
+    "db:validate": "prisma validate",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "admin:create": "node --env-file=.env.local scripts/create-admin.mjs"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "next": "15.5.29",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "server-only": "^0.0.1",
+    "stripe": "^23.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
@@ -27,6 +32,13 @@
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^3.2.7"
+    "vitest": "^5.1.0"
+  },
+  "overrides": {
+    "postcss": "^8.5.23",
+    "deepmerge-ts": "^8.0.0",
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.1"
+    }
   }
 }
