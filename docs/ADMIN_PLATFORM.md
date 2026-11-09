@@ -15,6 +15,8 @@ The implementation extends `tylperry1/Vinify` from `main` at `2abeb62`. The exis
 
 Use Node 24 or the version configured on Vercel. Copy `.env.example` to `.env.local`. Use a **separate empty database** for Preview. Supply `DATABASE_URL` and the browser origin in `NEXT_PUBLIC_SITE_URL`. Vercel's generated deployment and branch origins are accepted automatically in Preview when system environment variables are exposed. Set the exact site origin for custom aliases and local development. Do not put database or supplier keys in public environment variables.
 
+For an isolated Neon preview database, set `VINIFY_MIGRATE_PREVIEW=true` on the intended Preview branch. The build applies Prisma migrations with the preview connection in `DATABASE_URL_UNPOOLED`. Local and production builds use the manual migration command below.
+
 ```sh
 npm ci
 node --env-file=.env.local node_modules/prisma/build/index.js migrate deploy
