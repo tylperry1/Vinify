@@ -19,8 +19,10 @@ export async function monitored<T>(provider: string, operation: string, run: () 
   const started = Date.now(); let success = false;
   try { const result = await run(); success = true; return result; }
   finally {
-    if (process.env.DATABASE_URL) await db.apiUsage.create({ data: {
-      provider, operation, success, latencyMs: Date.now() - started, costCents: success ? costCents : 0,
-    } });
+    if (process.env.DATABASE_URL) {
+      await db.apiUsage.create({ data: {
+        provider, operation, success, latencyMs: Date.now() - started, costCents: success ? costCents : 0,
+      } }).catch(() => console.warn("Could not record provider usage"));
+    }
   }
 }

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Your account", robots: { index: false } };
 export default async function Account() {
   const user = await currentUser();
-  if (!user) return <PageShell><main className="mx-auto max-w-lg px-6 py-16"><h1 className="text-3xl font-bold">Your Vinify account</h1><p className="my-4">Sign in to view your report library. New accounts open with paid reports.</p><Link href="/account/login" className="admin-button">Sign in</Link><Link href="/decode" className="ml-5 text-blue-600">Use the free decoder</Link></main></PageShell>;
+  if (!user) return <PageShell><main className="mx-auto max-w-lg px-6 py-16"><h1 className="text-3xl font-bold">Your Vinify account</h1><p className="my-4">Sign in to view your report library. New accounts require an invitation.</p><Link href="/account/login" className="admin-button">Sign in</Link><Link href="/decode" className="ml-5 text-blue-600">Use the free decoder</Link></main></PageShell>;
   const [balance, reports, orders] = await Promise.all([
     db.creditLedger.aggregate({ where: { userId: user.id }, _sum: { delta: true } }),
     db.report.findMany({ where: { userId: user.id }, select: { publicId: true, vin: true, generatedAt: true }, orderBy: { generatedAt: "desc" }, take: 100 }),

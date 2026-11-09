@@ -9,7 +9,11 @@ export async function POST(request: Request) {
   const category = String(body.topic ?? "general");
   if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || message.length < 10 || message.length > 5000 || !["general", "report", "billing", "dealer", "privacy"].includes(category)) return Response.json({ error: "Enter a valid email and a message of 10–5000 characters" }, { status: 400 });
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (!await rateLimit(`support:${ip}`, 5, 3600000)) return Response.json({ error: "Please try again later" }, { status: 429 });
-  await db.supportTicket.create({ data: { email, category, subject: `${category} inquiry`, body: message } });
-  return Response.json({ received: true }, { status: 201 });
+  try {
+    if (!await rateLimit(`support:${ip}`, 5, 3600000)) return Response.json({ error: "Please try again later" }, { status: 429 });
+    await db.supportTicket.create({ data: { email, category, subject: `${category} inquiry`, body: message } });
+    return Response.json({ received: true }, { status: 201 });
+  } catch {
+    return Response.json({ error: "Support is temporarily unavailable. Please try again later." }, { status: 503 });
+  }
 }

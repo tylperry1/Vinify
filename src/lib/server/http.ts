@@ -1,8 +1,29 @@
 import "server-only";
-export function sameOrigin(request: Request) {
+export function trustedOrigin(request: Request): string | null {
   const origin = request.headers.get("origin");
-  const expected = process.env.NEXT_PUBLIC_SITE_URL;
-  return !!origin && !!expected && origin === new URL(expected).origin;
+  if (!origin) return null;
+
+  const allowed = [process.env.NEXT_PUBLIC_SITE_URL];
+  if (process.env.VERCEL_ENV === "preview") {
+    for (const host of [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]) {
+      if (host) allowed.push(`https://${host}`);
+    }
+  }
+
+  for (const url of allowed) {
+    if (!url) continue;
+    try {
+      const expected = new URL(url).origin;
+      if (expected !== "null" && origin === expected) return expected;
+    } catch {
+      // A malformed deployment setting must never authorize a request.
+    }
+  }
+  return null;
+}
+
+export function sameOrigin(request: Request) {
+  return trustedOrigin(request) !== null;
 }
 export async function readJson(request: Request, max = 8192): Promise<Record<string, unknown>> {
   const reader = request.body?.getReader();

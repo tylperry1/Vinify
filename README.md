@@ -22,6 +22,8 @@ npm run build        # production build
 The public site and decoder work without a database. For the admin console and account pages, see the
 [database and staff setup](./docs/ADMIN_PLATFORM.md). The app requires a Next.js server build for its API routes.
 
+Open `/install` on the deployed site for browser and device installation options. The installed app needs a connection for VIN data, reports, and account features.
+
 ## Layout
 
 ```

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { VinSearch } from "@/components/VinSearch";
-import { type DecodedVehicle, type RecallCampaign, fetchModelRecalls } from "@/lib/nhtsa";
+import type { DecodedVehicle, RecallCampaign } from "@/lib/nhtsa";
 import { validateVin } from "@/lib/vin";
 
 type State =
@@ -18,6 +18,13 @@ type RecallState = { kind: "idle" | "loading" } | { kind: "error" } | { kind: "d
 async function decodeVin(vin: string, init?: RequestInit): Promise<DecodedVehicle> {
   const response = await fetch(`/api/decode?vin=${encodeURIComponent(vin)}`, init);
   if (!response.ok) throw new Error("The decoder is temporarily unavailable. Please try again shortly.");
+  return response.json();
+}
+
+async function fetchModelRecalls(make: string, model: string, year: string, signal: AbortSignal): Promise<RecallCampaign[]> {
+  const query = new URLSearchParams({ make, model, year });
+  const response = await fetch(`/api/recalls?${query}`, { signal });
+  if (!response.ok) throw new Error("Recall data is temporarily unavailable");
   return response.json();
 }
 
@@ -67,7 +74,7 @@ export function DecodeClient() {
         setState({ kind: "done", vehicle });
         if (vehicle.identified) {
           setRecalls({ kind: "loading" });
-          fetchModelRecalls(vehicle.make!, vehicle.model!, vehicle.year!, { signal: ctrl.signal })
+          fetchModelRecalls(vehicle.make!, vehicle.model!, vehicle.year!, ctrl.signal)
             .then((items) => setRecalls({ kind: "done", items }))
             .catch((e) => e.name !== "AbortError" && setRecalls({ kind: "error" }));
         }

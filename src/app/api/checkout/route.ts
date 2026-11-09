@@ -2,10 +2,11 @@ import { currentUser, rateLimit } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { stripeClient } from "@/lib/server/stripe";
 import { historyProvider } from "@/lib/server/providers";
-import { readJson, sameOrigin } from "@/lib/server/http";
+import { readJson, trustedOrigin } from "@/lib/server/http";
 import { PLANS } from "@/lib/pricing";
 export async function POST(request: Request) {
-  if (!sameOrigin(request)) return Response.json({ error: "Invalid origin" }, { status: 403 });
+  const origin = trustedOrigin(request);
+  if (!origin) return Response.json({ error: "Invalid origin" }, { status: 403 });
   const user = await currentUser();
   if (!user) return Response.json({ error: "Sign in required" }, { status: 401 });
   if (process.env.COMMERCE_ENABLED !== "true" || !await historyProvider()) return Response.json({ error: "Paid reports are not available yet" }, { status: 503 });
@@ -28,7 +29,8 @@ export async function POST(request: Request) {
     const session = await stripe.checkout.sessions.create({ mode: "payment", customer_email: user.email,
       client_reference_id: order.id, metadata: { orderId: order.id }, payment_intent_data: { metadata: { orderId: order.id } },
       line_items: [{ price_data: { currency: "usd", unit_amount: order.amountCents, product_data: { name: plan.name } }, quantity: 1 }],
-      success_url: `${new URL(process.env.NEXT_PUBLIC_SITE_URL!).origin}/account?checkout=success`, cancel_url: `${new URL(process.env.NEXT_PUBLIC_SITE_URL!).origin}/account`,
+      success_url: `${origin}/account?checkout=success`,
+      cancel_url: `${origin}/account`,
     }, { idempotencyKey: order.id });
     await db.order.update({ where: { id: order.id }, data: { stripeCheckoutSession: session.id } });
     return Response.json({ url: session.url });

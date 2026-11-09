@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   headers: async () => [
     { source: "/:path*", headers: securityHeaders },
+    { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache, must-revalidate" }] },
     { source: "/admin/:path*", headers: [{ key: "Cache-Control", value: "private, no-store" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }] },
     { source: "/account/:path*", headers: [{ key: "Cache-Control", value: "private, no-store" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }] },
   ],
