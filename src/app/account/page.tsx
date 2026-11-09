@@ -4,7 +4,7 @@ import { currentUser } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { AccountActions } from "./AccountActions";
 import { historyProvider } from "@/lib/server/providers";
-import { logout } from "@/app/admin/login/actions";
+import { logout } from "@/app/account/login/actions";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Your account", robots: { index: false } };
 export default async function Account() {

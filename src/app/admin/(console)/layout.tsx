@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/server/auth";
-import { logout } from "../login/actions";
+import { logout } from "@/app/account/login/actions";
 import { Logo } from "@/components/Logo";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Vinify Admin", robots: { index: false, follow: false } };

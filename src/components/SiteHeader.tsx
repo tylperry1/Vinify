@@ -48,7 +48,7 @@ export function SiteHeader({ tone = "light" }: { tone?: "light" | "dark" }) {
 
         <div className="hidden items-center gap-2 lg:flex">
           <Link
-            href="/account"
+            href="/account/login"
             className={`rounded-full px-4 py-2 text-sm font-medium ${onDark ? "text-white/80 hover:text-white" : "text-muted hover:text-navy-900"}`}
           >
             Sign in
@@ -85,7 +85,7 @@ export function SiteHeader({ tone = "light" }: { tone?: "light" | "dark" }) {
                 {n.label}
               </Link>
             ))}
-            <Link href="/account" className="border-b border-line py-3.5 text-base font-medium text-navy-900">
+            <Link href="/account/login" className="border-b border-line py-3.5 text-base font-medium text-navy-900">
               Sign in
             </Link>
           </nav>

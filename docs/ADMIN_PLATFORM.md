@@ -26,6 +26,8 @@ npm run dev
 
 Create the first `SUPER_ADMIN` interactively, then provision `ADMIN` staff as needed. The script never overwrites an existing user or prints a password. Keep preview access protected in Vercel. Staff sessions have an eight-hour absolute expiry, hashed random tokens, secure HTTP-only cookies on deployed builds, and a database check on every protected entry point. Role changes revoke the affected user's sessions. Sign-in is throttled by email and by the address Vercel supplies at ingress. When running behind another proxy, ensure it replaces the forwarded address header.
 
+Staff and customers sign in at `/account/login` on the same site. Vinify opens the dashboard for the authenticated account's role. Existing `/admin/login` links redirect to the shared page.
+
 Admins can manage customer suspension and support statuses, inspect reports and orders, test NHTSA, and view API usage and activity. Only Super Admin can change provider settings, adjust credits, change staff roles, or release stale reservations. Report libraries and report detail pages restrict access by account ownership. Staff can create 24-hour, single-use customer invitations under Customers. Share each link privately. Customers set their own password and sign in after redemption. Identity recovery and MFA are launch follow-ups.
 
 ## Providers and observability
@@ -47,4 +49,4 @@ Reports use a transaction to reserve a credit and an atomic claim to prevent dup
 
 - `npm test`, `npm run lint`, `npm run build`, and `npm audit` cover local checks. The existing font rule warning in the App Router layout is non-blocking.
 - To run the database integration suite, apply the migration to a disposable empty PostgreSQL database, set `TEST_DATABASE_URL` to that database, then run `npm test -- tests/database.test.ts`. The suite writes test fixtures; use a fresh database for each run. Tests simulate Stripe/supplier responses and never issue a charge or a paid supplier request.
-- Preview without environment variables: open `/admin` and confirm it redirects to `/admin/login`, which explains database setup; check that `/decode` still returns live NHTSA results. With a preview database, migrate it and provision staff before exercising credentials, support ticketing and activity. Complete real Stripe test mode and licensed supplier sandbox checks before considering production.
+- Preview without environment variables: open `/admin` and confirm it redirects to `/account/login`, which explains database setup; check that `/decode` still returns live NHTSA results. With a preview database, migrate it and provision staff before exercising credentials, support ticketing and activity. Complete real Stripe test mode and licensed supplier sandbox checks before considering production.
