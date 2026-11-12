@@ -9,6 +9,7 @@ const COLS = [
       { href: "/sample-report", label: "Sample report" },
       { href: "/pricing", label: "Pricing" },
       { href: "/how-it-works", label: "How it works" },
+      { href: "/install", label: "Install Vinify" },
     ],
   },
   {

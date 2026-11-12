@@ -115,3 +115,17 @@ body {
 .prose-vinify li { margin: 0.25rem 0; }
 .prose-vinify a { color: var(--color-blue-600); text-decoration: underline; text-underline-offset: 3px; }
 .prose-vinify strong { color: var(--color-ink); }
+@media print {
+  body:has(.report-print) > a,
+  body:has(.report-print) > header,
+  body:has(.report-print) > footer {
+    display: none;
+  }
+  .report-print {
+    print-color-adjust: exact;
+  }
+  .report-print h2,
+  .report-print h3 {
+    break-after: avoid;
+  }
+}

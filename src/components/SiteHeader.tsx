@@ -51,7 +51,7 @@ export function SiteHeader({ tone = "light" }: { tone?: "light" | "dark" }) {
             href="/account"
             className={`rounded-full px-4 py-2 text-sm font-medium ${onDark ? "text-white/80 hover:text-white" : "text-muted hover:text-navy-900"}`}
           >
-            Sign in
+            Dashboard
           </Link>
           <Link
             href="/decode"
@@ -86,7 +86,7 @@ export function SiteHeader({ tone = "light" }: { tone?: "light" | "dark" }) {
               </Link>
             ))}
             <Link href="/account" className="border-b border-line py-3.5 text-base font-medium text-navy-900">
-              Sign in
+              Dashboard
             </Link>
           </nav>
           <Link href="/decode" className="mt-5 block rounded-full bg-navy-900 py-3 text-center font-semibold text-white">

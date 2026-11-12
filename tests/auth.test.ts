@@ -9,6 +9,7 @@ beforeEach(() => { vi.clearAllMocks(); process.env.DATABASE_URL = "postgresql://
 describe("server-side access controls", () => {
   it("rejects missing and expired sessions", async () => {
     mocks.token = undefined; expect(await currentUser()).toBeNull();
+    await expect(requireAdmin()).rejects.toThrow("redirect:/account/login");
     mocks.token = "opaque-token"; mocks.session.mockResolvedValue({ expires: new Date(0), user: { role: "ADMIN" } });
     expect(await currentUser()).toBeNull();
     expect(mocks.session).toHaveBeenCalledWith(expect.objectContaining({ where: { sessionToken: digest("opaque-token") } }));
@@ -17,7 +18,7 @@ describe("server-side access controls", () => {
     mocks.session.mockResolvedValue({ expires: new Date(Date.now() + 60000), user: { role: "ADMIN", deletedAt: new Date() } });
     expect(await currentUser()).toBeNull();
     mocks.session.mockResolvedValue({ expires: new Date(Date.now() + 60000), user: { role: "CUSTOMER", deletedAt: null } });
-    await expect(requireAdmin()).rejects.toThrow("redirect:/admin/login");
+    await expect(requireAdmin()).rejects.toThrow("redirect:/account");
   });
   it("restricts sensitive mutations to Super Admin", async () => {
     mocks.session.mockResolvedValue({ expires: new Date(Date.now() + 60000), user: { role: "ADMIN", deletedAt: null } });

@@ -120,7 +120,8 @@ export async function fetchModelRecalls(
   const res = await fetch(`${RECALLS_BASE}?${qs}`, init);
   if (!res.ok) throw new Error(`NHTSA recalls responded with ${res.status}`);
   const json = (await res.json()) as { results?: Record<string, unknown>[] };
-  return (json.results ?? []).map((r) => ({
+  if (!Array.isArray(json.results)) throw new Error("NHTSA recalls returned an invalid response");
+  return json.results.map((r) => ({
     campaignNumber: String(r.NHTSACampaignNumber ?? ""),
     component: String(r.Component ?? ""),
     summary: String(r.Summary ?? ""),

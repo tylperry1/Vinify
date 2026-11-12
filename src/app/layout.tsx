@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { AppInstallation } from "@/components/AppInstallation";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://vinify.example";
@@ -9,6 +10,8 @@ export const metadata: Metadata = {
   description:
     "Decode any VIN free and check vehicle history before you buy. Clear, affordable used-car reports from Vinify.",
   applicationName: "Vinify",
+  appleWebApp: { capable: true, title: "Vinify", statusBarStyle: "default" },
+  icons: { apple: "/icons/vinify-180.png" },
   openGraph: {
     type: "website",
     siteName: "Vinify",
@@ -42,7 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2">
           Skip to content
         </a>
-        {children}
+        <AppInstallation>{children}</AppInstallation>
       </body>
     </html>
   );

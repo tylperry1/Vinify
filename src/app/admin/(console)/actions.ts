@@ -1,9 +1,10 @@
 "use server";
+import { issueCustomerInvite } from "@/lib/server/customer-invites";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/server/db";
 import { requireAdmin } from "@/lib/server/auth";
 import { encryptSecret } from "@/lib/security";
-import { decodeVin } from "@/lib/nhtsa";
+import { decodeVin, fetchModelRecalls } from "@/lib/nhtsa";
 import { monitored } from "@/lib/server/providers";
 export async function saveProvider(form: FormData) {
   const actor = await requireAdmin(true);
@@ -23,8 +24,16 @@ export async function saveProvider(form: FormData) {
 }
 export async function testNhtsa() {
   const actor = await requireAdmin();
-  const success = await monitored("nhtsa", "connection_test", () => decodeVin("1HGCM82633A004352", { signal: AbortSignal.timeout(10000) })).then(() => true, () => false);
-  await db.auditLog.create({ data: { actorId: actor.id, action: "PROVIDER_TEST", target: "nhtsa", meta: { success } } });
+  const [decode, recalls] = await Promise.allSettled([
+    monitored("nhtsa", "connection_test", () => decodeVin("1HGCM82633A004352", { signal: AbortSignal.timeout(10000) })),
+    monitored("nhtsa", "recalls_connection_test", () => fetchModelRecalls("Honda", "Accord", "2003", { signal: AbortSignal.timeout(8000) })),
+  ]);
+  await db.auditLog.create({ data: {
+    actorId: actor.id,
+    action: "PROVIDER_TEST",
+    target: "nhtsa",
+    meta: { decode: decode.status === "fulfilled", recalls: recalls.status === "fulfilled" },
+  } });
   revalidatePath("/admin/api-center");
 }
 export async function updateCustomer(form: FormData) {
@@ -84,4 +93,17 @@ export async function releaseStaleReports() {
     }
   }, { isolationLevel: "Serializable" });
   revalidatePath("/admin/reports");
+}
+export async function createCustomerInvite(_state: { error?: string; token?: string }, form: FormData): Promise<{ error?: string; token?: string }> {
+  const actor = await requireAdmin();
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "Enter a valid email address." };
+  }
+  try {
+    const token = await issueCustomerInvite(email, actor.id);
+    return token ? { token } : { error: "An account already exists for that address." };
+  } catch {
+    return { error: "The invitation could not be created. Try again." };
+  }
 }

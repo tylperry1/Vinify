@@ -7,6 +7,8 @@ import { db } from "../src/lib/server/db";
 import { processStripeEvent } from "../src/lib/server/billing";
 import { generateReport } from "../src/lib/server/reports";
 import { rateLimit } from "../src/lib/server/auth";
+import { acceptCustomerInvite, issueCustomerInvite } from "../src/lib/server/customer-invites";
+import { digest, verifyPassword } from "../src/lib/security";
 const run = process.env.TEST_DATABASE_URL ? describe : describe.skip;
 run("PostgreSQL migration and transactional workflows", () => {
   const userId = "integration-customer", orderId = "integration-order";
@@ -67,5 +69,30 @@ run("PostgreSQL migration and transactional workflows", () => {
     expect(await rateLimit("integration-rate", 2, 60000)).toBe(true);
     expect(await rateLimit("integration-rate", 2, 60000)).toBe(true);
     expect(await rateLimit("integration-rate", 2, 60000)).toBe(false);
+  });
+  it("rotates customer invitations and consumes a valid link only once", async () => {
+    const email = "invitee@example.test";
+    const password = "test-customer-password";
+    const replaced = await issueCustomerInvite(email, userId);
+    const token = await issueCustomerInvite(email, userId);
+    expect(token).toMatch(/^[a-f0-9]{64}$/);
+    expect(await db.verificationToken.findUnique({ where: { token: token! } })).toBeNull();
+    expect(await acceptCustomerInvite(replaced!, password)).toBe(false);
+    const attempts = await Promise.all([
+      acceptCustomerInvite(token!, password),
+      acceptCustomerInvite(token!, password),
+    ]);
+    expect(attempts.filter(Boolean)).toHaveLength(1);
+    const customer = await db.user.findUniqueOrThrow({ where: { email } });
+    expect(customer.role).toBe("CUSTOMER");
+    expect(verifyPassword(password, customer.passwordHash!)).toBe(true);
+    expect(await issueCustomerInvite(email, userId)).toBeNull();
+  });
+  it("rejects expired customer invites", async () => {
+    const email = "expired-invite@example.test";
+    const token = await issueCustomerInvite(email, userId);
+    await db.verificationToken.update({ where: { token: digest(token!) }, data: { expires: new Date(0) } });
+    expect(await acceptCustomerInvite(token!, "test-customer-password")).toBe(false);
+    expect(await db.user.findUnique({ where: { email } })).toBeNull();
   });
 });
