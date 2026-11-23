@@ -63,7 +63,7 @@ export function resolveRange(key: string | undefined, from?: string, to?: string
 type Range = ReturnType<typeof resolveRange>;
 
 export async function dashboardMetrics(range: Range) {
-  const [paid, refunded, ordersAll, completed, pending, failed, newCustomers, totalCustomers, searches, usage, ticketsOpen] = await Promise.all([
+  const [paid, refunded, ordersAll, completed, pending, failed, newCustomers, totalCustomers, searches, usage, ticketsOpen, customerRows] = await Promise.all([
     db.order.findMany({ where: { status: "PAID", createdAt: { gte: range.start, lte: range.end } }, select: { amountCents: true, createdAt: true, planId: true } }),
     db.order.findMany({ where: { status: { in: ["REFUNDED", "PARTIALLY_REFUNDED"] }, createdAt: { gte: range.start, lte: range.end } }, select: { amountCents: true, createdAt: true } }),
     db.order.count({ where: { createdAt: { gte: range.start, lte: range.end } } }),
@@ -75,13 +75,15 @@ export async function dashboardMetrics(range: Range) {
     db.vinSearch.findMany({ where: { createdAt: { gte: range.start, lte: range.end } }, select: { createdAt: true } }),
     db.apiUsage.findMany({ where: { createdAt: { gte: range.start, lte: range.end } }, select: { provider: true, success: true, latencyMs: true, costCents: true, createdAt: true } }),
     db.supportTicket.count({ where: { status: { in: ["open", "in_progress"] } } }),
+    db.user.findMany({ where: { role: "CUSTOMER", createdAt: { gte: range.start, lte: range.end } }, select: { createdAt: true } }),
   ]);
 
-  const [prevPaid, prevRefunded, prevCustomers, prevSearches] = await Promise.all([
+  const [prevPaid, prevRefunded, prevCustomers, prevSearches, prevCompleted] = await Promise.all([
     db.order.findMany({ where: { status: "PAID", createdAt: { gte: range.prevStart, lte: range.prevEnd } }, select: { amountCents: true } }),
     db.order.findMany({ where: { status: { in: ["REFUNDED", "PARTIALLY_REFUNDED"] }, createdAt: { gte: range.prevStart, lte: range.prevEnd } }, select: { amountCents: true } }),
     db.user.count({ where: { role: "CUSTOMER", createdAt: { gte: range.prevStart, lte: range.prevEnd } } }),
     db.vinSearch.count({ where: { createdAt: { gte: range.prevStart, lte: range.prevEnd } } }),
+    db.report.count({ where: { generatedAt: { gte: range.prevStart, lte: range.prevEnd } } }),
   ]);
 
   const sum = (rows: { amountCents: number }[]) => rows.reduce((total, row) => total + row.amountCents, 0);
@@ -128,11 +130,15 @@ export async function dashboardMetrics(range: Range) {
       paidOrders: prevPaid.length,
       customers: prevCustomers,
       searches: prevSearches,
+      completedReports: prevCompleted,
     },
     series: {
       revenue: bucketize(paid, range, row => row.amountCents),
       orders: bucketize(paid, range, () => 1),
-      customers: bucketize(newCustomersByDay(await db.user.findMany({ where: { role: "CUSTOMER", createdAt: { gte: range.start, lte: range.end } }, select: { createdAt: true } })), range, () => 1),
+      refunds: bucketize(refunded, range, row => row.amountCents),
+      costs: bucketize(usage, range, row => row.costCents),
+      customers: bucketize(customerRows, range, () => 1),
+      searches: bucketize(searches, range, () => 1),
       reports: bucketize(completed.map(row => ({ createdAt: row.generatedAt })), range, () => 1),
     },
   };
@@ -146,10 +152,6 @@ function group<T>(rows: T[], keyOf: (row: T) => string) {
     if (bucket) bucket.push(row); else map.set(key, [row]);
   }
   return map;
-}
-
-function newCustomersByDay(rows: { createdAt: Date }[]) {
-  return rows.map(row => ({ createdAt: row.createdAt }));
 }
 
 /** Sum a numeric field into evenly spaced buckets covering the range. */
@@ -179,7 +181,12 @@ function bucketize<T extends { createdAt: Date }>(rows: T[], range: Range, value
   }));
 }
 
+/**
+ * Percentage change against the previous window. Returns null when there is no
+ * prior activity to compare with — a jump from zero is not a percentage, and
+ * showing "+100%" would misrepresent it.
+ */
 export function change(current: number, previous: number) {
-  if (previous === 0) return current === 0 ? null : 100;
+  if (previous === 0) return null;
   return Math.round(((current - previous) / previous) * 100);
 }

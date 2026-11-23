@@ -11,6 +11,12 @@ import { generateReport } from "@/lib/server/reports";
 import { issueToken } from "@/lib/server/tokens";
 import { emailDeliverable, resetEmail, sendEmail, siteUrl } from "@/lib/server/email";
 import { RESET_TTL_MS } from "@/lib/account";
+
+/** Only internal admin paths are accepted as a return target. */
+function backTo(value: FormDataEntryValue | null, fallback: string) {
+  const path = String(value ?? "");
+  return path.startsWith("/admin") && !path.startsWith("//") ? path : fallback;
+}
 export async function saveProvider(form: FormData) {
   const actor = await requireAdmin(true);
   const id = String(form.get("provider")), secret = String(form.get("secret") ?? "");
@@ -35,15 +41,18 @@ export async function testNhtsa() {
 }
 export async function updateCustomer(form: FormData) {
   const actor = await requireAdmin(), id = String(form.get("id"));
+  const suspend = form.get("suspended") === "on";
   await db.$transaction(async tx => {
     const user = await tx.user.findUniqueOrThrow({ where: { id } });
     if (user.role !== "CUSTOMER") throw new Error("Use the staff role controls for staff accounts");
-    const deletedAt = form.get("suspended") === "on" ? new Date() : null;
+    const deletedAt = suspend ? new Date() : null;
     await tx.user.update({ where: { id }, data: { deletedAt } });
     if (deletedAt) await tx.session.deleteMany({ where: { userId: id } });
     await tx.auditLog.create({ data: { actorId: actor.id, action: deletedAt ? "CUSTOMER_SUSPENDED" : "CUSTOMER_RESTORED", target: id } });
   });
   revalidatePath("/admin/customers");
+  revalidatePath(`/admin/customers/${id}`);
+  redirect(`${backTo(form.get("returnTo"), `/admin/customers/${id}`)}?notice=${suspend ? "suspended" : "restored"}`);
 }
 export async function adjustCredits(form: FormData) {
   const actor = await requireAdmin(true), id = String(form.get("id"));
@@ -59,6 +68,8 @@ export async function adjustCredits(form: FormData) {
     await tx.auditLog.create({ data: { actorId: actor.id, action: "CREDIT_ADJUSTED", target: id, meta: { delta, note } } });
   }, { isolationLevel: "Serializable" });
   revalidatePath("/admin/customers");
+  revalidatePath(`/admin/customers/${id}`);
+  redirect(`${backTo(form.get("returnTo"), `/admin/customers/${id}`)}?notice=credits`);
 }
 export async function updateStaff(form: FormData) {
   const actor = await requireAdmin(true), id = String(form.get("id")), role = String(form.get("role"));
@@ -69,6 +80,8 @@ export async function updateStaff(form: FormData) {
     await tx.auditLog.create({ data: { actorId: actor.id, action: "STAFF_ROLE_UPDATED", target: id, meta: { role } } });
   });
   revalidatePath("/admin/settings");
+  revalidatePath("/admin/staff");
+  redirect(`${backTo(form.get("returnTo"), "/admin/staff")}?notice=role-updated`);
 }
 export async function updateTicket(form: FormData) {
   const actor = await requireAdmin(), id = String(form.get("id")), status = String(form.get("status"));
@@ -76,7 +89,9 @@ export async function updateTicket(form: FormData) {
   await db.$transaction([
     db.supportTicket.update({ where: { id }, data: { status } }),
     db.auditLog.create({ data: { actorId: actor.id, action: "TICKET_UPDATED", target: id, meta: { status } } }),
-  ]); revalidatePath("/admin/support");
+  ]);
+  revalidatePath("/admin/support");
+  redirect(`${backTo(form.get("returnTo"), "/admin/support")}?notice=ticket-updated`);
 }
 
 export async function releaseStaleReports() {
@@ -90,6 +105,7 @@ export async function releaseStaleReports() {
     }
   }, { isolationLevel: "Serializable" });
   revalidatePath("/admin/reports");
+  redirect("/admin/reports?notice=released");
 }
 
 /** Re-run a failed report for one request, reporting the provider's real answer. */

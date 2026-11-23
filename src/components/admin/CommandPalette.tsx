@@ -6,6 +6,21 @@ import { AdminIcon } from "./icons";
 type Item = { title: string; hint: string; href: string };
 type Group = { label: string; items: Item[] };
 
+/** Shown before the operator types, so the palette is useful on its own. */
+const shortcuts: Group[] = [{
+  label: "Go to",
+  items: [
+    { title: "Overview", hint: "Command center", href: "/admin" },
+    { title: "Analytics", hint: "Trends and funnel", href: "/admin/analytics" },
+    { title: "Orders", hint: "Every order", href: "/admin/orders" },
+    { title: "Customers", hint: "Accounts", href: "/admin/customers" },
+    { title: "Reports", hint: "Report engine", href: "/admin/reports" },
+    { title: "Support center", hint: "Ticket queue", href: "/admin/support" },
+    { title: "API center", hint: "Providers", href: "/admin/api-center" },
+    { title: "System health", hint: "Live checks", href: "/admin/health" },
+  ],
+}];
+
 /** ⌘K / Ctrl+K palette backed by the authorised /api/admin/search endpoint. */
 export function CommandPalette() {
   const router = useRouter();
@@ -17,7 +32,9 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
   const restoreFocus = useRef<HTMLElement | null>(null);
 
-  const flat = groups.flatMap(group => group.items);
+  const searching = query.trim().length >= 2;
+  const visible = searching ? groups : shortcuts;
+  const flat = visible.flatMap(group => group.items);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -72,11 +89,11 @@ export function CommandPalette() {
   if (!open) {
     return (
       <button onClick={() => { restoreFocus.current = document.activeElement as HTMLElement; setOpen(true); }}
-        className="hidden items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-sm text-muted transition hover:text-ink sm:flex"
+                  className="flex items-center gap-2 rounded-lg border border-line px-2 py-2 text-sm text-muted transition hover:border-blue-400/60 hover:text-ink sm:px-3 sm:py-1.5"
         aria-keyshortcuts="Meta+K Control+K">
         <AdminIcon name="search" className="size-4" />
-        <span>Search</span>
-        <kbd className="rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-faint">⌘K</kbd>
+        <span className="hidden sm:inline">Search</span>
+        <kbd className="hidden rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] font-semibold text-faint sm:inline">⌘K</kbd>
       </button>
     );
   }
@@ -105,10 +122,9 @@ export function CommandPalette() {
         </div>
 
         <div className="max-h-[52vh] overflow-y-auto p-2">
-          {query.trim().length < 2 && <p className="px-3 py-6 text-center text-sm text-faint">Type at least two characters.</p>}
-          {query.trim().length >= 2 && busy && !groups.length && <p className="px-3 py-6 text-center text-sm text-faint">Searching…</p>}
-          {query.trim().length >= 2 && !busy && !groups.length && <p className="px-3 py-6 text-center text-sm text-faint">No matches for “{query.trim()}”.</p>}
-          {groups.map(group => (
+          {busy && searching && !groups.length && <p className="px-3 py-6 text-center text-sm text-faint">Searching…</p>}
+          {searching && !busy && !groups.length && <p className="px-3 py-6 text-center text-sm text-faint">No matches for “{query.trim()}”.</p>}
+          {visible.map(group => (
             <div key={group.label} className="mb-1">
               <p className="admin-nav-group-label px-3 pb-1 pt-2 !text-faint">{group.label}</p>
               <ul>

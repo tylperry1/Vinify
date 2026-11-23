@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { adjustCredits, adminSendReset, retryReport, updateCustomer } from "../../actions";
+import { ConfirmSubmit } from "@/components/admin/ConfirmSubmit";
 
 export const dynamic = "force-dynamic";
 
@@ -92,14 +93,21 @@ export default async function CustomerProfile({ params, searchParams }: {
               <form action={updateCustomer}>
                 <input type="hidden" name="id" value={customer.id} />
                 <input type="hidden" name="suspended" value={customer.deletedAt ? "" : "on"} />
-                <button className={`rounded-lg px-4 py-2 text-sm font-semibold ${customer.deletedAt ? "bg-good text-white" : "border border-bad/40 bg-bad-bg text-bad"}`}>
-                  {customer.deletedAt ? "Reactivate account" : "Suspend account"}
-                </button>
+                <input type="hidden" name="returnTo" value={`/admin/customers/${customer.id}`} />
+                {customer.deletedAt ? (
+                  <button className="admin-button-secondary w-full !border-good/40 !text-good">Reactivate account</button>
+                ) : (
+                  <ConfirmSubmit
+                    message={`Suspend ${customer.email}? Every session for this account is deleted immediately. You can reactivate the account later.`}
+                    confirmLabel="Suspend account"
+                    className="admin-button-danger w-full">Suspend account</ConfirmSubmit>
+                )}
               </form>
             )}
             <form action={adminSendReset}>
               <input type="hidden" name="id" value={customer.id} />
-              <button className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-muted hover:text-ink">Send password reset</button>
+              <input type="hidden" name="returnTo" value={`/admin/customers/${customer.id}`} />
+              <button className="admin-button-secondary w-full">Send password reset</button>
             </form>
           </div>
         </div>
@@ -111,6 +119,7 @@ export default async function CustomerProfile({ params, searchParams }: {
           <h2 className="font-display text-sm font-bold text-ink">Adjust credits</h2>
           <form action={adjustCredits} className="mt-3 flex flex-wrap items-end gap-3">
             <input type="hidden" name="id" value={customer.id} />
+            <input type="hidden" name="returnTo" value={`/admin/customers/${customer.id}`} />
             <input type="hidden" name="key" value={randomUUID()} />
             <label className="text-sm">Delta<input className="admin-input w-32" name="delta" type="number" min={-100} max={100} required /></label>
             <label className="flex-1 text-sm">Reason<input className="admin-input" name="note" minLength={5} maxLength={500} required /></label>
