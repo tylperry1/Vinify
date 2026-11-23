@@ -1,4 +1,5 @@
 import "server-only";
+import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "./db";
@@ -16,6 +17,27 @@ export async function requireAdmin(superOnly = false) {
   if (!user || !isAdmin(user.role)) redirect("/login");
   if (superOnly && user.role !== "SUPER_ADMIN") throw new Error("Super Admin access required");
   return user;
+}
+/** Any signed-in, non-deleted account (customers and staff both have profiles). */
+export async function requireUser() {
+  const user = await currentUser();
+  if (!user) redirect("/login?next=/account");
+  return user;
+}
+/**
+ * Create a session row and set the signed cookie. Shared by sign-in and
+ * registration so cookie policy can never drift between the two.
+ */
+export async function createSession(userId: string) {
+  const token = randomBytes(32).toString("hex"), expires = new Date(Date.now() + 8 * 3600_000);
+  await db.session.create({ data: { userId, sessionToken: digest(token), expires } });
+  (await cookies()).set(cookieName, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    expires,
+  });
 }
 export async function rateLimit(key: string, max: number, windowMs: number) {
   const bucket = Math.floor(Date.now() / windowMs), id = digest(`${key}:${bucket}`);

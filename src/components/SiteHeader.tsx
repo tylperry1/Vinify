@@ -54,6 +54,12 @@ export function SiteHeader({ tone = "light" }: { tone?: "light" | "dark" }) {
             Sign in
           </Link>
           <Link
+            href="/register"
+            className={`rounded-full px-4 py-2 text-sm font-medium ${onDark ? "text-white/70 hover:text-white" : "text-muted hover:text-navy-900"}`}
+          >
+            Create account
+          </Link>
+          <Link
             href="/decode"
             className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
               onDark ? "bg-white text-navy-900 hover:bg-sky-300/90" : "bg-navy-900 text-white hover:bg-navy-800"
@@ -87,6 +93,9 @@ export function SiteHeader({ tone = "light" }: { tone?: "light" | "dark" }) {
             ))}
             <Link href="/login" className="border-b border-line py-3.5 text-base font-medium text-navy-900">
               Sign in
+            </Link>
+            <Link href="/register" className="border-b border-line py-3.5 text-base font-medium text-navy-900">
+              Create account
             </Link>
           </nav>
           <Link href="/decode" className="mt-5 block rounded-full bg-navy-900 py-3 text-center font-semibold text-white">

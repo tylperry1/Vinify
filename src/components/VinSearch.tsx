@@ -42,7 +42,7 @@ export function VinSearch({
     setTouched(true);
     if (!v.wellFormed) return;
     if (onSubmitVin) onSubmitVin(v.vin);
-    else router.push(`/decode?vin=${v.vin}`);
+    else router.push(`/vehicles/${v.vin}`);
   }
 
   const cells = Array.from({ length: VIN_LENGTH }, (_, i) => vin[i] ?? "");
