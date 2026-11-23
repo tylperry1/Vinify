@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { logout } from "@/app/login/actions";
 import { AdminIcon } from "./icons";
+import { CommandPalette } from "./CommandPalette";
 import { adminNav, labelForPath } from "./nav";
 
 type Theme = "light" | "dark";
@@ -145,6 +146,7 @@ export function AdminShell({
             </div>
 
             <div className="flex items-center gap-2">
+              <CommandPalette />
               <button onClick={toggleTheme} className="rounded-lg border border-line p-2 text-muted transition hover:text-ink" aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>
                 <AdminIcon name={theme === "dark" ? "sun" : "moon"} className="size-4" />
               </button>
