@@ -9,7 +9,8 @@ export function checkNewPassword(current: string, next: string, confirm: string,
   return null;
 }
 export const passwordMessages: Record<string, string> = {
-  done: "Login details updated. Other signed-in sessions have been signed out.",
+  done: "Password changed. Other signed-in sessions have been signed out.",
+  "email-done": "Sign-in email updated. Your password did not change.",
   current: "Your current password is incorrect.",
   email: "Enter a valid email address.",
   taken: "That email address is already in use.",
