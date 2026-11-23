@@ -53,7 +53,7 @@ Evidence keys: **T** = `npm test` (Vitest, 26 tests), **B** = `npm run build` + 
 - [ ] Verify domain availability and purchase domain — `NOT STARTED`
 - [ ] Conduct trademark clearance research — `NOT STARTED` (needs USPTO search + counsel)
 - [x] Create GitHub repository — `VERIFIED` github.com/tylperry1/Vinify exists with admin access. **Note: repo is public.**
-- [x] Configure Vercel hosting — `VERIFIED` 2026-11-05: production project `govinify` (team tyler-perrys-projects) linked to GitHub `main`; production deployment READY at https://govinify.vercel.app (earlier project `vinify` / vinify-nine.vercel.app also deploys from `main` — duplicate, pending removal decision); pages return 200, unknown route 404, VIN decode works live (desktop + mobile), robots.txt disallows indexing. Custom domain not yet configured.
+- [x] Configure Vercel hosting — `VERIFIED` 2026-11-05: production project `vinify` (team tyler-perrys-projects) linked to GitHub `main`; production deployment READY at https://vinify-nine.vercel.app. The second project `govinify` (https://govinify.vercel.app) is a duplicate deployment of the same `main` branch and is to be disconnected/removed; only `vinify` is the production target. Pages return 200, unknown route 404, VIN decode works live (desktop + mobile), robots.txt disallows indexing. Custom domain not yet configured.
 - [ ] Configure production and development environments — `NOT STARTED`; `.env.example` lists required variables
 - [ ] Set up PostgreSQL database — `IMPLEMENTED` (schema only): `prisma/schema.prisma` passes `prisma validate`; no database provisioned or migrated
 - [ ] Configure environment variables and secrets — `NOT STARTED` (template in `.env.example`)
@@ -283,6 +283,8 @@ All items `NOT STARTED`.
 ---
 
 ## Change log
+
+- 2026-11-23 — Production target confirmed as the `vinify` Vercel project (https://vinify-nine.vercel.app), not `govinify`. Code lives only in the GitHub repo `tylperry1/Vinify`; both Vercel projects auto-deploy from its `main`, so `govinify` should be disconnected in Vercel to stop duplicate deployments. Pushed `89a0437` (single `/login`, self-service staff credentials, local development environment) and verified `/login` returns 200 on `vinify-nine`.
 
 - 2026-11-06 — Super Admin account provisioned for the owner (verified live sign-in). Added `/admin/account` change-password page: verifies current password, 14–256 chars, rejects reuse and email-name passwords, rate-limited (5 per 15 min), revokes other sessions, audit-logged (`PASSWORD_CHANGED` / `PASSWORD_CHANGE_FAILED`). `IMPLEMENTED` + unit-tested.
 

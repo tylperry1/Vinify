@@ -247,7 +247,7 @@ Additional differences:
 |---|---|---|
 | Database | embedded PostgreSQL, `.local-test/pgdata`, port 55432 | Neon, managed |
 | Env file | `.env.local` (git-ignored) | Vercel project settings |
-| Port / URL | `http://localhost:3001` | `https://govinify.vercel.app` |
+| Port / URL | `http://localhost:3001` | `https://vinify-nine.vercel.app` |
 | Data | fictional, `seed_*` ids, `.test` emails | real customers and orders |
 | Stripe | commerce disabled, `livemode: false` events | live keys in Vercel only |
 | Dev commands | allowed on loopback | refused (`assertLocalDatabase`) |
