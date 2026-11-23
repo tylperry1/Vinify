@@ -1,4 +1,4 @@
-import type { PasswordChangeError } from "./password-policy";
+import { checkNewPassword, type PasswordChangeError } from "./password-policy";
 
 /** How long an email-verification and a password-reset link stay valid. */
 export const VERIFY_TTL_MS = 24 * 60 * 60_000;
@@ -20,13 +20,9 @@ export function normalizeName(input: unknown): string | null {
 
 /**
  * Rules for setting a password without knowing the current one (registration,
- * password reset). Password changes that know the current password use
- * `checkNewPassword` so they can also reject reuse.
+ * password reset). Reuses the shared policy so the rules can't drift; with no
+ * current password the "same password" rule can never fire.
  */
 export function checkPassword(next: string, confirm: string, email: string): PasswordChangeError | null {
-  if (next !== confirm) return "mismatch";
-  if (next.length < 14 || next.length > 256) return "length";
-  const local = email.split("@")[0]?.toLowerCase() ?? "";
-  if (local.length >= 4 && next.toLowerCase().includes(local)) return "contains-email";
-  return null;
+  return checkNewPassword("", next, confirm, email);
 }

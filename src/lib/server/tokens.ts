@@ -28,7 +28,3 @@ export async function resolveToken(prefix: string, token: string): Promise<{ use
   if (!row || !row.identifier.startsWith(prefix) || row.expires <= new Date()) return null;
   return { userId: row.identifier.slice(prefix.length), stored };
 }
-
-export async function revokeToken(stored: string): Promise<void> {
-  await db.verificationToken.deleteMany({ where: { token: stored } });
-}

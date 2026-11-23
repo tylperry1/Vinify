@@ -5,10 +5,13 @@ import { db } from "@/lib/server/db";
 import { rateLimit } from "@/lib/server/auth";
 import { normalizeEmail, RESET_TTL_MS } from "@/lib/account";
 import { issueToken } from "@/lib/server/tokens";
-import { resetEmail, sendEmail, siteUrl } from "@/lib/server/email";
+import { emailDeliverable, resetEmail, sendEmail, siteUrl } from "@/lib/server/email";
 
 export async function requestPasswordReset(form: FormData) {
   if (!process.env.DATABASE_URL) redirect("/forgot-password?status=unavailable");
+  // Without a mail provider in production nothing can be delivered, so say so
+  // instead of showing "reset instructions are on the way".
+  if (!emailDeliverable()) redirect("/forgot-password?status=unavailable");
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
   if (!await rateLimit(`reset-ip:${ip}`, 10, 3600000)) redirect("/forgot-password?status=limited");
   const email = normalizeEmail(form.get("email"));

@@ -22,6 +22,15 @@ export function emailConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
 }
 
+/**
+ * Whether mail can reach a person here: Resend in production, or the local
+ * `.local-test/mail.log` file during development. Production without a provider
+ * is the one case where nothing is delivered, so callers must not claim a send.
+ */
+export function emailDeliverable(): boolean {
+  return emailConfigured() || process.env.NODE_ENV !== "production";
+}
+
 export function siteUrl(pathname: string): string {
   try {
     return new URL(pathname, process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001").toString();
@@ -43,11 +52,11 @@ function branded(title: string, body: string, action: { href: string; label: str
 export function verificationEmail(url: string) {
   return {
     subject: "Verify your Vinify email",
-    text: `Confirm your Vinify email address: ${url}\n\nThis link expires in 24 hours. If you didn't create an account, ignore this email.`,
+    text: `Confirm your Vinify email address: ${url}\n\nOpen that link and click "Confirm email address". The link expires in 24 hours. If you didn't create an account, ignore this email.`,
     html: branded(
       "Confirm your email",
-      "Verify this address to secure your Vinify account and keep access to your reports. This link expires in 24 hours.",
-      { href: url, label: "Verify email" },
+      "Verify this address to secure your Vinify account and keep access to your reports. Open the page and click \"Confirm email address\" — the link expires in 24 hours.",
+      { href: url, label: "Open verification page" },
     ),
   };
 }

@@ -8,10 +8,10 @@ import { digest, isAdmin, verifyPassword } from "@/lib/security";
 export async function login(form: FormData) {
   if (!process.env.DATABASE_URL) redirect("/login?error=setup");
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
-  if (!await rateLimit(`login-ip:${ip}`, 20, 900000)) redirect("/login?error=credentials");
+  if (!await rateLimit(`login-ip:${ip}`, 20, 900000)) redirect("/login?error=limited");
   const email = String(form.get("email") ?? "").trim().toLowerCase().slice(0, 254);
   const password = String(form.get("password") ?? "");
-  if (!await rateLimit(`login:${email}`, 5, 900000)) redirect("/login?error=credentials");
+  if (!await rateLimit(`login:${email}`, 5, 900000)) redirect("/login?error=limited");
   const user = await db.user.findUnique({ where: { email } });
   const valid = verifyPassword(password, user?.passwordHash ?? "00000000000000000000000000000000:" + "00".repeat(64));
   if (!user || !valid || user.deletedAt) {

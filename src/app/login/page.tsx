@@ -16,7 +16,12 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         {!process.env.DATABASE_URL && <p role="status" className="mb-5 rounded-xl bg-warn-bg p-4">Accounts are awaiting database setup. The free decoder remains available.</p>}
         {status === "reset" && <p role="status" className="mb-5 rounded-xl bg-good-bg p-4 text-good">Password updated. Sign in with your new password.</p>}
         {error === "setup" && <p role="alert" className="mb-5 rounded-xl bg-warn-bg p-4 text-warn">Database setup is required.</p>}
-        {error && error !== "setup" && <p role="alert" className="mb-5 text-bad">Sign-in unsuccessful. Check your details or try again later.</p>}
+        {error === "limited" && (
+          <p role="alert" className="mb-5 rounded-xl bg-warn-bg p-4 text-warn">
+            Too many sign-in attempts. Wait 15 minutes and try again, or <Link href="/forgot-password" className="font-semibold underline">reset your password</Link>.
+          </p>
+        )}
+        {error && error !== "setup" && error !== "limited" && <p role="alert" className="mb-5 text-bad">Sign-in unsuccessful. Check your details or try again later.</p>}
         <form action={login} className="grid gap-4">
           <label>Email<input className="admin-input" name="email" type="email" autoComplete="username" required maxLength={254} /></label>
           <label>Password<input className="admin-input" name="password" type="password" autoComplete="current-password" required maxLength={256} /></label>
