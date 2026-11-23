@@ -1,10 +1,12 @@
 import { requireAdmin } from "@/lib/server/auth";
 import { passwordMessages } from "@/lib/password-policy";
 import { PasswordStrength } from "@/components/PasswordStrength";
+import { lastPasswordChange, utcStamp } from "@/lib/server/password-history";
 import { changeEmail, changePassword } from "./actions";
 export const dynamic = "force-dynamic";
 export default async function AdminAccount({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const user = await requireAdmin(), { status } = await searchParams;
+  const changedAt = await lastPasswordChange(user.id);
   const message = status ? passwordMessages[status] : undefined, ok = status === "done" || status === "email-done";
   return <><h1 className="text-3xl font-bold">Your account</h1>
     <p className="my-3 text-muted">{user.email} · {user.role.replaceAll("_", " ")}</p>
@@ -12,6 +14,9 @@ export default async function AdminAccount({ searchParams }: { searchParams: Pro
     <section className="max-w-lg rounded-2xl border border-line bg-white p-6">
       <h2 className="text-xl font-bold">Change password</h2>
       <p className="mt-2 text-sm text-muted">Your current password confirms the change. A new password needs 14 or more characters and must not contain your email name. Saving signs out your other sessions.</p>
+      <p className="mt-1 text-sm text-muted">
+        {changedAt ? <>Last changed <time dateTime={changedAt.toISOString()}>{utcStamp(changedAt)}</time>.</> : "No password change recorded since this account was created."}
+      </p>
       <form action={changePassword} className="mt-5 grid gap-4">
         <label>Current password<input className="admin-input" name="current" type="password" autoComplete="current-password" required maxLength={256} /></label>
         <label>New password<PasswordStrength name="next" /></label>

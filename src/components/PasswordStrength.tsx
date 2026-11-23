@@ -1,5 +1,6 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 
 /**
  * Advisory strength feedback for a new password. The hard rules live on the
@@ -8,6 +9,17 @@ import { useMemo, useState } from "react";
  */
 export function PasswordStrength({ name }: { name: string }) {
   const [value, setValue] = useState("");
+  const { pending } = useFormStatus();
+  const submitting = useRef(false);
+  // The form clears after the action finishes; drop the metered value with it so
+  // the meter never keeps describing a password that is no longer in the field.
+  useEffect(() => {
+    if (pending) submitting.current = true;
+    else if (submitting.current) {
+      submitting.current = false;
+      setValue("");
+    }
+  }, [pending]);
   const result = useMemo(() => score(value), [value]);
   return (
     <>
@@ -19,6 +31,7 @@ export function PasswordStrength({ name }: { name: string }) {
         minLength={14}
         maxLength={256}
         autoComplete="new-password"
+        value={value}
         onChange={event => setValue(event.target.value)}
         aria-describedby="password-strength"
       />

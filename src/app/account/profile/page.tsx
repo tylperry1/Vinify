@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageShell } from "@/components/PageShell";
 import { requireUser } from "@/lib/server/auth";
+import { lastPasswordChange, utcStamp } from "@/lib/server/password-history";
 import { resendVerification } from "@/app/verify-email/actions";
 import { changePassword, requestDeletion, updateProfile } from "./actions";
 
@@ -20,6 +21,7 @@ const MESSAGES: Record<string, { tone: "good" | "bad" | "warn"; text: string }> 
   limited: { tone: "warn", text: "Too many attempts. Wait 15 minutes and try again." },
   confirm: { tone: "warn", text: "Type DELETE to confirm account deletion." },
   staff: { tone: "warn", text: "Staff accounts can't be deleted from this screen." },
+  "profile-unsaved": { tone: "bad", text: "We couldn't confirm your profile changes were saved. Try again; if it keeps happening, contact support." },
 };
 
 const TONES = { good: "bg-good-bg text-good", bad: "bg-bad-bg text-bad", warn: "bg-warn-bg text-warn" } as const;
@@ -27,6 +29,7 @@ const TONES = { good: "bg-good-bg text-good", bad: "bg-bad-bg text-bad", warn: "
 export default async function Profile({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const user = await requireUser();
   const { status } = await searchParams;
+  const changedAt = await lastPasswordChange(user.id);
   const message = status ? MESSAGES[status] : undefined;
   return (
     <PageShell>
@@ -66,6 +69,9 @@ export default async function Profile({ searchParams }: { searchParams: Promise<
 
         <section aria-labelledby="password-h" className="mt-6 rounded-2xl border border-line bg-white p-6">
           <h2 id="password-h" className="text-xl font-bold">Password</h2>
+          <p className="mt-2 text-sm text-muted">
+            {changedAt ? <>Last changed <time dateTime={changedAt.toISOString()}>{utcStamp(changedAt)}</time>.</> : "No password change recorded since this account was created."}
+          </p>
           <form action={changePassword} className="mt-4 grid gap-4">
             <label>Current password<input className="admin-input" name="current" type="password" autoComplete="current-password" required maxLength={256} /></label>
             <label>New password<input className="admin-input" name="next" type="password" autoComplete="new-password" required minLength={14} maxLength={256} /></label>

@@ -14,6 +14,7 @@ export const passwordMessages: Record<string, string> = {
   current: "Your current password is incorrect. Use the password you set most recently.",
   unsaved: "We couldn't confirm your new password was saved. Try again; if it keeps happening, contact support.",
   email: "Enter a valid email address.",
+  "email-unsaved": "We couldn't confirm the sign-in email was updated. Try again; if it keeps happening, contact support.",
   taken: "That email address is already in use.",
   unchanged: "Change your email or password before saving.",
   mismatch: "The new passwords don't match.",

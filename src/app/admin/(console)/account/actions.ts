@@ -56,5 +56,8 @@ export async function changeEmail(form: FormData) {
     db.user.update({ where: { id: user.id }, data: { email } }),
     db.auditLog.create({ data: { actorId: user.id, action: "CREDENTIALS_UPDATED", target: user.id, meta: { emailChanged: true, from: user.email, to: email } } }),
   ]);
+  // Read the row back: only report a save that the database actually holds.
+  const saved = await db.user.findUnique({ where: { id: user.id }, select: { email: true } });
+  if (saved?.email !== email) back("email-unsaved");
   back("email-done");
 }

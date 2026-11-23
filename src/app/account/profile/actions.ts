@@ -15,6 +15,9 @@ export async function updateProfile(form: FormData) {
     db.user.update({ where: { id: user.id }, data: { name, marketingOptIn } }),
     db.auditLog.create({ data: { actorId: user.id, action: "PROFILE_UPDATED", target: user.id, meta: { marketingOptIn } } }),
   ]);
+  // Read the row back: only report a save that the database actually holds.
+  const saved = await db.user.findUnique({ where: { id: user.id }, select: { name: true, marketingOptIn: true } });
+  if (!saved || saved.name !== name || saved.marketingOptIn !== marketingOptIn) redirect("/account/profile?status=profile-unsaved");
   redirect("/account/profile?status=profile");
 }
 
