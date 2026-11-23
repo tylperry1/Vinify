@@ -1,10 +1,16 @@
 "use server";
+import { randomUUID } from "node:crypto";
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/server/db";
 import { requireAdmin } from "@/lib/server/auth";
 import { encryptSecret } from "@/lib/security";
 import { decodeVin } from "@/lib/nhtsa";
 import { monitored } from "@/lib/server/providers";
+import { generateReport } from "@/lib/server/reports";
+import { issueToken } from "@/lib/server/tokens";
+import { emailDeliverable, resetEmail, sendEmail, siteUrl } from "@/lib/server/email";
+import { RESET_TTL_MS } from "@/lib/account";
 export async function saveProvider(form: FormData) {
   const actor = await requireAdmin(true);
   const id = String(form.get("provider")), secret = String(form.get("secret") ?? "");
@@ -84,4 +90,38 @@ export async function releaseStaleReports() {
     }
   }, { isolationLevel: "Serializable" });
   revalidatePath("/admin/reports");
+}
+
+/** Re-run a failed report for one request, reporting the provider's real answer. */
+export async function retryReport(form: FormData) {
+  const actor = await requireAdmin(true);
+  const id = String(form.get("request") ?? "");
+  const request = await db.reportRequest.findUnique({ where: { id }, select: { userId: true, vin: true, status: true, report: { select: { id: true } } } });
+  if (!request) throw new Error("Unknown report request");
+  if (request.report) throw new Error("That request already has a report");
+  if (!["FAILED", "REFUNDED"].includes(request.status)) throw new Error("Only failed requests can be retried");
+  // generateReport refuses before touching credits when no licensed adapter exists.
+  const result = await generateReport(request.userId, request.vin, randomUUID());
+  await db.auditLog.create({ data: { actorId: actor.id, action: "REPORT_RETRY_REQUESTED", target: id, meta: { outcome: result.status } } });
+  revalidatePath("/admin/reports");
+  const returnTo = String(form.get("returnTo") ?? "/admin/reports");
+  redirect(`${returnTo.startsWith("/admin/") ? returnTo : "/admin/reports"}?notice=retry-${result.status}`);
+}
+
+/** Start a password reset for a customer and send it only when delivery is configured. */
+export async function adminSendReset(form: FormData) {
+  const actor = await requireAdmin();
+  const id = String(form.get("id") ?? "");
+  const user = await db.user.findUnique({ where: { id }, select: { id: true, email: true, deletedAt: true } });
+  if (!user || user.deletedAt) redirect(`/admin/customers/${id}?notice=missing`);
+  if (!emailDeliverable()) {
+    await db.auditLog.create({ data: { actorId: actor.id, action: "PASSWORD_RESET_NOT_SENT", target: id, meta: { reason: "no email provider" } } });
+    redirect(`/admin/customers/${id}?notice=email-unavailable`);
+  }
+  const token = await issueToken(`reset:${id}`, RESET_TTL_MS);
+  const sent = await sendEmail({ to: user.email, ...resetEmail(siteUrl(`/reset-password?token=${token}`)) });
+  await db.auditLog.create({ data: { actorId: actor.id, action: "PASSWORD_RESET_SENT_BY_ADMIN", target: id, meta: { delivered: sent.delivered, provider: sent.provider } } });
+  // "console" means development wrote it to .local-test/mail.log, which is not a delivery.
+  const notice = sent.delivered ? "sent" : sent.provider === "console" ? "dev-log" : "send-failed";
+  redirect(`/admin/customers/${id}?notice=${notice}`);
 }
