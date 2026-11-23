@@ -27,10 +27,15 @@ export async function changePassword(form: FormData) {
   const token = (await cookies()).get(cookieName)?.value ?? "";
   await db.$transaction([
     db.user.update({ where: { id: user.id }, data: { passwordHash: hashPassword(next) } }),
-    // Keep this session; revoke every other session for the account.
-    db.session.deleteMany({ where: { userId: user.id, NOT: { sessionToken: digest(token) } } }),
+    // Keep this session and revoke every other one. Without the current token
+    // there is nothing to keep, so revoke nothing rather than sign the person
+    // out of the session they are changing the password from.
+    ...(token ? [db.session.deleteMany({ where: { userId: user.id, NOT: { sessionToken: digest(token) } } })] : []),
     db.auditLog.create({ data: { actorId: user.id, action: "CREDENTIALS_UPDATED", target: user.id, meta: { passwordChanged: true } } }),
   ]);
+  // Read the row back: only report a save that the database actually holds.
+  const saved = await db.user.findUnique({ where: { id: user.id }, select: { passwordHash: true } });
+  if (!saved?.passwordHash || !verifyPassword(next, saved.passwordHash)) back("unsaved");
   back("done");
 }
 

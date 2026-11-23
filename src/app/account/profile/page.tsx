@@ -11,7 +11,8 @@ export const metadata: Metadata = { title: "Account settings", robots: { index: 
 const MESSAGES: Record<string, { tone: "good" | "bad" | "warn"; text: string }> = {
   profile: { tone: "good", text: "Profile updated." },
   password: { tone: "good", text: "Password changed. Other signed-in sessions have been signed out." },
-  current: { tone: "bad", text: "Your current password is incorrect." },
+  current: { tone: "bad", text: "Your current password is incorrect. Use the password you set most recently." },
+  unsaved: { tone: "bad", text: "We couldn't confirm your new password was saved. Try again; if it keeps happening, contact support." },
   mismatch: { tone: "bad", text: "The new passwords don't match." },
   length: { tone: "bad", text: "Use 14 to 256 characters." },
   same: { tone: "bad", text: "Choose a password different from your current one." },
