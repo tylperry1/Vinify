@@ -14,7 +14,8 @@ const notes: Record<string, string> = {
   token: "That setup token doesn't match. Copy it exactly and try again.",
   email: "Enter a valid email address.",
   used: "Setup has already been completed. This page no longer creates accounts.",
-  exists: "An account with that email already exists, so nothing was changed. Sign in or use the password reset flow.",
+  exists: "An account with that email already exists, and the create form never touches an existing account. Use the reset form below to set its password and grant it Super Admin.",
+  missing: "No account exists for that email yet. Use the create form instead.",
   unavailable: "Setup is not enabled on this deployment.",
   limited: "Too many attempts. Wait 15 minutes and try again.",
   failed: "The account could not be created. Nothing was changed.",
@@ -50,6 +51,21 @@ export default async function AdminSetup({ searchParams }: { searchParams: Promi
               <button className="admin-button">Create Super Admin</button>
             </form>
             <p className="mt-5 text-sm text-faint">14–256 characters, and it must not contain the email name.</p>
+
+            <hr className="my-8 border-line" />
+            <h2 className="text-xl font-bold">Already have this account?</h2>
+            <p className="my-3 text-sm text-muted">
+              If the email below is already registered, this sets a new password on that account and grants it Super Admin.
+              Nothing else about the account changes — no new record, no other fields touched.
+            </p>
+            <form action={provisionSuperAdmin} className="grid gap-4" autoComplete="off">
+              <input type="hidden" name="mode" value="reset" />
+              <label>Setup token<input className="admin-input" name="token" type="password" required autoComplete="off" /></label>
+              <label>Email<input className="admin-input" name="email" type="email" required maxLength={254} autoComplete="off" /></label>
+              <label>New password<input className="admin-input" name="password" type="password" required minLength={14} maxLength={256} autoComplete="new-password" /></label>
+              <label>Confirm new password<input className="admin-input" name="confirm" type="password" required minLength={14} maxLength={256} autoComplete="new-password" /></label>
+              <button className="admin-button">Set password and grant Super Admin</button>
+            </form>
           </>
         )}
       </section>
