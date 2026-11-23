@@ -13,7 +13,7 @@ export async function currentUser() {
 }
 export async function requireAdmin(superOnly = false) {
   const user = await currentUser();
-  if (!user || !isAdmin(user.role)) redirect("/admin/login");
+  if (!user || !isAdmin(user.role)) redirect("/login");
   if (superOnly && user.role !== "SUPER_ADMIN") throw new Error("Super Admin access required");
   return user;
 }

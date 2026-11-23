@@ -13,14 +13,21 @@ Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · PostgreSQL via Prism
 
 ```bash
 npm ci
-cp .env.example .env.local
-npm run dev          # http://localhost:3000
+npm run dev:db       # local PostgreSQL + migrations + http://localhost:3001
+npm run db:seed      # fictional test data (idempotent)
 npm test             # Vitest unit tests
 npm run build        # production build
 ```
 
-The public site and decoder work without a database. For the admin console and account pages, see the
-[database and staff setup](./docs/ADMIN_PLATFORM.md). The app requires a Next.js server build for its API routes.
+`npm run dev:db` starts an embedded PostgreSQL instance in `.local-test/pgdata`, applies migrations
+and starts Next.js on port 3001. It only ever touches loopback databases — production (Neon) is off
+limits to every development command. See the [development guide](./docs/DEVELOPMENT.md) for seeded
+accounts, `db:status`, `db:reset:local` and troubleshooting.
+
+`npm run dev` still runs Next.js alone on port 3000. The public site and decoder work without a
+database; the admin console and account pages need one. For staff provisioning and the admin
+platform itself, see the [admin runbook](./docs/ADMIN_PLATFORM.md). The app requires a Next.js
+server build for its API routes.
 
 ## Layout
 
@@ -33,6 +40,7 @@ src/lib/pricing.ts       PROPOSED plans + unit-economics helpers
 src/lib/credits.ts       Append-only credit ledger logic (reserve → consume | release)
 src/lib/providers/       History-provider adapter contract + clearly-labelled sample provider
 prisma/schema.prisma     Data model (users, orders, subscriptions, ledger, reports, webhooks, audit)
+scripts/dev/             Local database lifecycle, seeding and status commands
 tests/                   Unit tests
 ```
 

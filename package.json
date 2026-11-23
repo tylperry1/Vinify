@@ -11,6 +11,11 @@
     "db:validate": "prisma validate",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy",
+    "dev:db": "node scripts/dev/dev.mjs",
+    "db:seed": "node scripts/dev/seed.mjs",
+    "db:reset:local": "node scripts/dev/reset.mjs",
+    "db:status": "node scripts/dev/status.mjs",
+    "db:stop:local": "node scripts/dev/db.mjs stop",
     "admin:create": "node --env-file=.env.local scripts/create-admin.mjs"
   },
   "dependencies": {

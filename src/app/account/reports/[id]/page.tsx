@@ -6,7 +6,7 @@ import { PageShell } from "@/components/PageShell";
 import type { NormalizedReport } from "@/lib/providers/types";
 export const dynamic = "force-dynamic";
 export default async function Report({ params }: { params: Promise<{ id: string }> }) {
-  const user = await currentUser(); if (!user) redirect("/account/login");
+  const user = await currentUser(); if (!user) redirect("/login");
   const { id } = await params;
   const report = await db.report.findFirst({ where: { publicId: id, userId: user.id } });
   if (!report) notFound();

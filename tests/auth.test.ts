@@ -17,7 +17,7 @@ describe("server-side access controls", () => {
     mocks.session.mockResolvedValue({ expires: new Date(Date.now() + 60000), user: { role: "ADMIN", deletedAt: new Date() } });
     expect(await currentUser()).toBeNull();
     mocks.session.mockResolvedValue({ expires: new Date(Date.now() + 60000), user: { role: "CUSTOMER", deletedAt: null } });
-    await expect(requireAdmin()).rejects.toThrow("redirect:/admin/login");
+    await expect(requireAdmin()).rejects.toThrow("redirect:/login");
   });
   it("restricts sensitive mutations to Super Admin", async () => {
     mocks.session.mockResolvedValue({ expires: new Date(Date.now() + 60000), user: { role: "ADMIN", deletedAt: null } });

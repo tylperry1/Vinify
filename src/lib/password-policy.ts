@@ -9,8 +9,11 @@ export function checkNewPassword(current: string, next: string, confirm: string,
   return null;
 }
 export const passwordMessages: Record<string, string> = {
-  done: "Password updated. Other signed-in sessions have been signed out.",
+  done: "Login details updated. Other signed-in sessions have been signed out.",
   current: "Your current password is incorrect.",
+  email: "Enter a valid email address.",
+  taken: "That email address is already in use.",
+  unchanged: "Change your email or password before saving.",
   mismatch: "The new passwords don't match.",
   length: "Use 14 to 256 characters.",
   same: "Choose a password different from your current one.",
